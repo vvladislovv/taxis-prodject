@@ -14,7 +14,7 @@ import { useRideStore } from '@/store/rideStore'
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
   loading: () => (
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <p className="text-gray-600">Загрузка карты...</p>
@@ -51,15 +51,17 @@ const Home = () => {
     <main className="relative w-full h-screen overflow-hidden" suppressHydrationWarning>
       <MapView />
       
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {!orderStatus && (
           <motion.div
+            key="address-panel"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="absolute top-0 left-0 right-0 z-10 p-4"
             style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+            suppressHydrationWarning
           >
             <motion.div
               whileTap={{ scale: 0.9 }}
@@ -88,7 +90,7 @@ const Home = () => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {(fromAddress && toAddress) && !orderStatus && (
           <div suppressHydrationWarning>
             <CollapsiblePanel

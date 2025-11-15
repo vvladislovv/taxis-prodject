@@ -19,7 +19,7 @@ const RideOptions = () => {
         </div>
         <span className={`text-xs px-3 py-1 rounded-full font-medium shadow-sm ${
           (childSeat ? 1 : 0) + (luggage ? 1 : 0) > 0 
-            ? 'bg-green-100 text-green-700' 
+            ? 'bg-yellow-100 text-yellow-700' 
             : 'bg-white/60 text-gray-500'
         }`}>
           {(childSeat ? 1 : 0) + (luggage ? 1 : 0)} выбрано
@@ -30,8 +30,8 @@ const RideOptions = () => {
           whileTap={{ scale: 0.95 }}
           className={`relative flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer transition-all ${
             childSeat
-              ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 shadow-md'
-              : 'bg-white/70 hover:bg-white/90 border-2 border-transparent'
+              ? 'bg-yellow-50 border-2 border-yellow-300 shadow-md'
+              : 'bg-white hover:bg-gray-50 border-2 border-gray-200'
           }`}
         >
           <motion.div
@@ -45,7 +45,7 @@ const RideOptions = () => {
             <div className={`font-bold text-sm mb-1 ${childSeat ? 'text-gray-900' : 'text-gray-800'}`}>
               Детское кресло
             </div>
-            <div className={`text-xs font-semibold ${childSeat ? 'text-green-600' : 'text-gray-600'}`}>
+            <div className={`text-xs font-semibold ${childSeat ? 'text-yellow-600' : 'text-gray-600'}`}>
               +50₽
             </div>
           </div>
@@ -54,13 +54,13 @@ const RideOptions = () => {
             type="checkbox"
             checked={childSeat}
             onChange={(e) => setChildSeat(e.target.checked)}
-            className="absolute top-2 right-2 w-5 h-5 text-green-500 rounded focus:ring-green-400 focus:ring-2 cursor-pointer"
+            className="absolute top-2 right-2 w-5 h-5 text-yellow-500 rounded focus:ring-yellow-400 focus:ring-2 cursor-pointer"
           />
           {childSeat && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute top-1 right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"
+              className="absolute top-1 right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center"
             >
               <span className="text-white text-xs font-bold">✓</span>
             </motion.div>
@@ -71,8 +71,8 @@ const RideOptions = () => {
           whileTap={{ scale: 0.95 }}
           className={`relative flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer transition-all ${
             luggage
-              ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 shadow-md'
-              : 'bg-white/70 hover:bg-white/90 border-2 border-transparent'
+              ? 'bg-yellow-50 border-2 border-yellow-300 shadow-md'
+              : 'bg-white hover:bg-gray-50 border-2 border-gray-200'
           }`}
         >
           <motion.div
@@ -86,7 +86,7 @@ const RideOptions = () => {
             <div className={`font-bold text-sm mb-1 ${luggage ? 'text-gray-900' : 'text-gray-800'}`}>
               Багаж
             </div>
-            <div className={`text-xs font-semibold ${luggage ? 'text-blue-600' : 'text-gray-600'}`}>
+            <div className={`text-xs font-semibold ${luggage ? 'text-yellow-600' : 'text-gray-600'}`}>
               +30₽
             </div>
           </div>
@@ -95,13 +95,13 @@ const RideOptions = () => {
             type="checkbox"
             checked={luggage}
             onChange={(e) => setLuggage(e.target.checked)}
-            className="absolute top-2 right-2 w-5 h-5 text-blue-500 rounded focus:ring-blue-400 focus:ring-2 cursor-pointer"
+            className="absolute top-2 right-2 w-5 h-5 text-yellow-500 rounded focus:ring-yellow-400 focus:ring-2 cursor-pointer"
           />
           {luggage && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute top-1 right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center"
+              className="absolute top-1 right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center"
             >
               <span className="text-white text-xs font-bold">✓</span>
             </motion.div>

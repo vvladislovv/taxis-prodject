@@ -5,9 +5,12 @@ import { motion } from 'framer-motion'
 import { useRideStore } from '@/store/rideStore'
 
 const RatingPanel = () => {
-  const { rating, setRating, reset, fromAddress, toAddress, price, duration } = useRideStore()
+  const { rating, setRating, reset, fromAddress, toAddress, price, duration, orderStatus } = useRideStore()
   const [selectedRating, setSelectedRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
+  
+  // Показываем панель только если поездка завершена
+  if (orderStatus !== 'completed') return null
 
   const handleRatingClick = (value: number) => {
     setSelectedRating(value)
@@ -59,11 +62,22 @@ const RatingPanel = () => {
     >
       <div className="glass rounded-t-3xl p-6 shadow-2xl">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2 text-gray-800">Оцените поездку</h2>
-          <p className="text-gray-600 text-sm">
-            {fromAddress.split(',')[0]} → {toAddress.split(',')[0]}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', damping: 10, stiffness: 200 }}
+            className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </motion.div>
+          <h2 className="text-2xl font-bold mb-2 text-gray-800">Поездка завершена!</h2>
+          <p className="text-lg font-semibold mb-3 text-gray-700">Оцените поездку</p>
+          <p className="text-gray-600 text-sm mb-1">
+            {fromAddress || 'Москва'} → {toAddress || 'Москва'}
           </p>
-          <p className="text-gray-500 text-xs mt-1">Стоимость: {price}₽</p>
+          <p className="text-gray-700 font-semibold mt-2">Стоимость: {price}₽</p>
         </div>
 
         <div className="flex justify-center items-center space-x-2 mb-6">
@@ -102,7 +116,7 @@ const RatingPanel = () => {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-xl shadow-xl transition-all"
+              className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-xl shadow-lg transition-all"
             >
               Отправить оценку
             </motion.button>

@@ -21,15 +21,16 @@ const DriverTracking = ({ onCancel }: DriverTrackingProps) => {
 
   useEffect(() => {
     // Симуляция поиска водителя с прогрессом
+    // Увеличен интервал до 100ms для лучшей производительности
     const progressInterval = setInterval(() => {
       setSearchProgress(prev => {
         if (prev >= 100) {
           clearInterval(progressInterval)
           return 100
         }
-        return prev + 2
+        return prev + 3 // Увеличено для компенсации большего интервала
       })
-    }, 60)
+    }, 100) // Увеличен с 60ms до 100ms
 
     const searchTimer = setTimeout(() => {
       setStatus('found')

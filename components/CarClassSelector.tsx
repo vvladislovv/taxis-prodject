@@ -61,8 +61,8 @@ const CarClassSelector = () => {
             onClick={() => setCarClass(car.id)}
             className={`relative p-4 rounded-xl transition-all overflow-hidden ${
               carClass === car.id
-                ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-xl ring-2 ring-yellow-300 ring-offset-2'
-                : 'bg-white/70 hover:bg-white/90 shadow-md'
+                ? 'bg-yellow-400 shadow-lg border-2 border-yellow-500'
+                : 'bg-white hover:bg-gray-50 shadow-sm border-2 border-gray-200'
             }`}
           >
             {carClass === car.id && (
@@ -71,7 +71,7 @@ const CarClassSelector = () => {
                 animate={{ opacity: 1 }}
                 className="absolute top-2 right-2"
               >
-                <span className="text-white text-xs">✓</span>
+                <span className="text-gray-900 text-xs font-bold">✓</span>
               </motion.div>
             )}
             
@@ -96,12 +96,12 @@ const CarClassSelector = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2 pt-2 border-t border-yellow-300/50"
+                className="mt-2 pt-2 border-t border-yellow-500/30"
               >
                 <div className="text-[10px] text-gray-700 space-y-1">
                   {car.features.map((feature, idx) => (
                     <div key={idx} className="flex items-center space-x-1">
-                      <span className="text-yellow-600">•</span>
+                      <span className="text-yellow-500">•</span>
                       <span>{feature}</span>
                     </div>
                   ))}

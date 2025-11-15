@@ -20,19 +20,17 @@ const AddressInput = () => {
   const toSelectedFromMap = !!toCoords && toAddress && toAddress !== '' && toAddress !== 'Определение адреса...'
   
   const handleSelectOnMap = (type: 'from' | 'to') => {
-    const coords = type === 'from' ? fromCoords : toCoords
-    
-    // Если координаты уже есть, центрируем карту на них
-    if (coords && centerMapOnCoords) {
-      centerMapOnCoords(coords)
-      return
-    }
-    
-    // Если координат нет, активируем режим выбора на карте
+    // Всегда активируем режим размещения стикера на карте
+    // Если режим уже активен для этого типа, отключаем его
     if (mapClickMode === type) {
       setMapClickMode(null)
     } else {
       setMapClickMode(type)
+      // Если координаты уже есть, центрируем карту на них для удобства
+      const coords = type === 'from' ? fromCoords : toCoords
+      if (coords && centerMapOnCoords) {
+        setTimeout(() => centerMapOnCoords(coords), 100)
+      }
     }
   }
 
@@ -82,17 +80,21 @@ const AddressInput = () => {
     setShowToSuggestions(true)
   }
 
-  const selectSuggestion = (address: string, type: 'from' | 'to') => {
+  const selectSuggestion = async (address: string, type: 'from' | 'to') => {
     if (type === 'from') {
       setFromAddress(address)
       setFromQuery(address)
       setShowFromSuggestions(false)
+      // Геокодирование произойдет автоматически через useEffect в MapView
     } else {
       setToAddress(address)
       setToQuery(address)
       setShowToSuggestions(false)
+      // Геокодирование произойдет автоматически через useEffect в MapView
     }
   }
+
+  // Убрана функция геолокации - используем только тестовые данные
 
   return (
     <motion.div
@@ -110,7 +112,7 @@ const AddressInput = () => {
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-4 h-4 rounded-full bg-green-500 flex-shrink-0 shadow-lg shadow-green-500/50"
+            className="w-4 h-4 rounded-full bg-green-500 flex-shrink-0 shadow-md"
           />
           <div className="flex-1 relative">
             <input
@@ -119,35 +121,35 @@ const AddressInput = () => {
               value={fromQuery}
               onChange={(e) => handleFromChange(e.target.value)}
               onFocus={() => setShowFromSuggestions(true)}
-              className={`w-full bg-white/90 backdrop-blur-sm border-2 rounded-xl pl-10 pr-16 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all shadow-md ${
+              className={`w-full bg-white backdrop-blur-sm border-2 rounded-xl pl-10 pr-16 py-3 text-sm focus:outline-none transition-all shadow-md ${
                 fromSelectedFromMap
-                  ? 'border-green-400 bg-green-50/50' 
+                  ? 'border-green-500 bg-green-50/30' 
                   : mapClickMode === 'from'
-                  ? 'border-yellow-400 bg-yellow-50/50'
-                  : 'border-white/40'
+                  ? 'border-green-400 bg-green-50/20'
+                  : 'border-gray-200'
               }`}
             />
-            {fromSelectedFromMap && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute right-12 top-1/2 transform -translate-y-1/2"
-              >
-                <span className="text-green-500 text-xs font-semibold">✓</span>
-              </motion.div>
-            )}
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">📍</span>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleSelectOnMap('from')}
-              className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                mapClickMode === 'from'
-                  ? 'bg-yellow-400 text-gray-900'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              На карте
-            </motion.button>
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1 z-10">
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleSelectOnMap('from')
+                }}
+                className={`p-2 rounded-full transition-all shadow-sm ${
+                  mapClickMode === 'from'
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : 'bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-600'
+                }`}
+                title="Выбрать на карте"
+                type="button"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </motion.div>
         
@@ -182,7 +184,15 @@ const AddressInput = () => {
                     <motion.button
                       key={item.id}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => selectSuggestion(item.fromAddress, 'from')}
+                      onClick={() => {
+                        // Устанавливаем оба адреса из истории
+                        setFromAddress(item.fromAddress)
+                        setFromQuery(item.fromAddress)
+                        setToAddress(item.toAddress)
+                        setToQuery(item.toAddress)
+                        setShowFromSuggestions(false)
+                        setShowToSuggestions(false)
+                      }}
                       className="w-full text-left px-3 py-2 hover:bg-white/30 rounded-lg transition-colors bg-gray-200/40"
                     >
                       <div className="text-sm text-gray-700">{item.fromAddress}</div>
@@ -218,7 +228,7 @@ const AddressInput = () => {
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0 shadow-lg shadow-red-500/50"
+            className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0 shadow-md"
           />
           <div className="flex-1 relative">
             <input
@@ -227,35 +237,34 @@ const AddressInput = () => {
               value={toQuery}
               onChange={(e) => handleToChange(e.target.value)}
               onFocus={() => setShowToSuggestions(true)}
-              className={`w-full bg-white/90 backdrop-blur-sm border-2 rounded-xl pl-10 pr-16 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all shadow-md ${
+              className={`w-full bg-white backdrop-blur-sm border-2 rounded-xl pl-10 pr-16 py-3 text-sm focus:outline-none transition-all shadow-md ${
                 toSelectedFromMap
-                  ? 'border-red-400 bg-red-50/50' 
+                  ? 'border-red-500 bg-red-50/30' 
                   : mapClickMode === 'to'
-                  ? 'border-yellow-400 bg-yellow-50/50'
-                  : 'border-white/40'
+                  ? 'border-red-400 bg-red-50/20'
+                  : 'border-gray-200'
               }`}
             />
-            {toSelectedFromMap && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute right-12 top-1/2 transform -translate-y-1/2"
-              >
-                <span className="text-red-500 text-xs font-semibold">✓</span>
-              </motion.div>
-            )}
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🎯</span>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleSelectOnMap('to')}
-              className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                handleSelectOnMap('to')
+              }}
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all shadow-sm z-10 ${
                 mapClickMode === 'to'
-                  ? 'bg-yellow-400 text-gray-900'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  ? 'bg-red-100 text-red-700 border border-red-300'
+                  : 'bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-600'
               }`}
+              title="Выбрать на карте"
+              type="button"
             >
-              На карте
-            </motion.button>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
           </div>
         </motion.div>
         
@@ -290,7 +299,15 @@ const AddressInput = () => {
                     <motion.button
                       key={item.id}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => selectSuggestion(item.toAddress, 'to')}
+                      onClick={() => {
+                        // Устанавливаем оба адреса из истории
+                        setFromAddress(item.fromAddress)
+                        setFromQuery(item.fromAddress)
+                        setToAddress(item.toAddress)
+                        setToQuery(item.toAddress)
+                        setShowFromSuggestions(false)
+                        setShowToSuggestions(false)
+                      }}
                       className="w-full text-left px-3 py-2 hover:bg-white/30 rounded-lg transition-colors bg-gray-200/40"
                     >
                       <div className="text-sm text-gray-700">{item.toAddress}</div>

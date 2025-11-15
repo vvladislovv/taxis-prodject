@@ -63,16 +63,19 @@ export const useAddressStore = create<AddressState>()(
       },
       
       addToHistory: (fromAddress, toAddress) => {
+        if (!fromAddress || !toAddress || fromAddress.trim() === '' || toAddress.trim() === '') {
+          return // Не добавляем пустые адреса
+        }
         const { history } = get()
         const newItem: HistoryItem = {
           id: Date.now().toString(),
-          fromAddress,
-          toAddress,
+          fromAddress: fromAddress.trim(),
+          toAddress: toAddress.trim(),
           date: new Date().toISOString(),
         }
-        // Добавляем в начало и ограничиваем 20 последними
+        // Добавляем в начало и ограничиваем 20 последними, убираем дубликаты
         const updatedHistory = [newItem, ...history.filter(
-          item => !(item.fromAddress === fromAddress && item.toAddress === toAddress)
+          item => !(item.fromAddress.trim() === fromAddress.trim() && item.toAddress.trim() === toAddress.trim())
         )].slice(0, 20)
         set({ history: updatedHistory })
       },

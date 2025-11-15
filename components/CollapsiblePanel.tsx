@@ -5,6 +5,7 @@ import { motion, PanInfo } from 'framer-motion'
 import CarClassSelector from './CarClassSelector'
 import RideOptions from './RideOptions'
 import RideSummary from './RideSummary'
+import RouteSelector from './RouteSelector'
 
 interface CollapsiblePanelProps {
   fromAddress: string
@@ -99,6 +100,7 @@ const CollapsiblePanel = ({ fromAddress, toAddress, carClass, price, duration }:
                 maxHeight: `${expandedHeight - 80}px`,
               }}
             >
+              <RouteSelector />
               <CarClassSelector />
               <RideOptions />
               {price > 0 && (
@@ -121,13 +123,13 @@ const CollapsiblePanel = ({ fromAddress, toAddress, carClass, price, duration }:
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-gray-500 mb-1">Маршрут</div>
-                  <div className="text-sm font-semibold text-gray-800 truncate">
+                  <div className="text-sm font-semibold text-gray-900 truncate">
                     {fromAddress.split(',')[0]} → {toAddress.split(',')[0]}
                   </div>
                 </div>
                 <div className="ml-4 text-right flex-shrink-0">
                   <div className="text-xs text-gray-500 mb-1">Стоимость</div>
-                  <div className="text-xl font-bold text-yellow-600">
+                  <div className="text-xl font-bold text-yellow-500">
                     {price > 0 ? `${price}₽` : '—'}
                   </div>
                 </div>

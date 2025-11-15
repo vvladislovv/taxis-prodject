@@ -14,6 +14,7 @@ interface RideState {
   childSeat: boolean
   luggage: boolean
   price: number
+  fixedPrice: number | null // Зафиксированная цена после заказа
   duration: number
   distance: number
   orderStatus: 'none' | 'searching' | 'found' | 'coming' | 'arrived' | 'riding' | 'completed' | null
@@ -26,6 +27,10 @@ interface RideState {
     location?: [number, number]
   } | null
   rating: number | null
+  routeAlternatives: Array<{ distance: number; duration: number }> | null
+  routeData: any | null // Полные данные маршрутов для перерисовки
+  routeCoordinates: [number, number][] | null // Координаты выбранного маршрута для движения машины
+  selectedRouteIndex: number
   setFromAddress: (address: string) => void
   setToAddress: (address: string) => void
   setFromCoords: (coords: [number, number] | null) => void
@@ -34,9 +39,14 @@ interface RideState {
   setChildSeat: (value: boolean) => void
   setLuggage: (value: boolean) => void
   calculatePrice: (distance?: number, duration?: number) => void
+  setFixedPrice: (price: number | null) => void
   setOrderStatus: (status: 'none' | 'searching' | 'found' | 'coming' | 'arrived' | 'riding' | 'completed' | null) => void
   setDriver: (driver: { name: string; car: string; plate: string; rating: number; eta: number; location?: [number, number] } | null) => void
   setRating: (rating: number | null) => void
+  setRouteAlternatives: (alternatives: Array<{ distance: number; duration: number }> | null) => void
+  setRouteData: (data: any | null) => void
+  setRouteCoordinates: (coordinates: [number, number][] | null) => void
+  setSelectedRouteIndex: (index: number) => void
   mapClickMode: 'from' | 'to' | 'auto' | null
   setMapClickMode: (mode: 'from' | 'to' | 'auto' | null) => void
   centerMapOnCoords: ((coords: [number, number]) => void) | null
@@ -50,6 +60,28 @@ const basePrices = {
   business: 400,
 }
 
+// Тестовые данные водителей по классам
+// Эти данные используются для справки, реальный выбор происходит в RideSummary
+export const DRIVER_POOLS = {
+  economy: [
+    { name: 'Иван Петров', car: 'Toyota Camry', plate: 'А123БВ 777', rating: 4.8 },
+    { name: 'Алексей Смирнов', car: 'Hyundai Solaris', plate: 'В456ГД 123', rating: 4.9 },
+    { name: 'Сергей Козлов', car: 'Kia Rio', plate: 'Д012ЗИ 789', rating: 4.7 },
+  ],
+  comfort: [
+    { name: 'Максим Соколов', car: 'Toyota Camry', plate: 'К890ОП 345', rating: 4.9 },
+    { name: 'Павел Морозов', car: 'Skoda Octavia', plate: 'П123РС 456', rating: 4.8 },
+  ],
+  business: [
+    { name: 'Дмитрий Иванов', car: 'Mercedes-Benz E-Class', plate: 'С789ЕЖ 456', rating: 5.0 },
+    { name: 'Михаил Волков', car: 'BMW 5 Series', plate: 'Е345КЛ 012', rating: 4.9 },
+    { name: 'Александр Орлов', car: 'Mercedes-Benz S-Class', plate: 'Х789ЦЧ 678', rating: 5.0 },
+    { name: 'Роман Богданов', car: 'Audi A6', plate: 'Ш012ЩЫ 789', rating: 4.9 },
+    { name: 'Игорь Медведев', car: 'Mercedes-Benz C-Class', plate: 'Э345ЮЯ 890', rating: 5.0 },
+    { name: 'Николай Федоров', car: 'BMW 7 Series', plate: 'Я678АБ 901', rating: 5.0 },
+  ],
+}
+
 export const useRideStore = create<RideState>()(
   persist(
     (set, get) => ({
@@ -61,11 +93,16 @@ export const useRideStore = create<RideState>()(
       childSeat: false,
       luggage: false,
       price: 0,
+      fixedPrice: null,
       duration: 0,
       distance: 0,
       orderStatus: null,
       driver: null,
       rating: null,
+      routeAlternatives: null,
+      routeData: null,
+      routeCoordinates: null,
+      selectedRouteIndex: 0,
       mapClickMode: null,
       centerMapOnCoords: null,
       
@@ -90,6 +127,9 @@ export const useRideStore = create<RideState>()(
       setCarClass: (carClass) => {
         set({ carClass })
         const state = get()
+        // Не пересчитываем цену если она зафиксирована после заказа
+        if (state.fixedPrice !== null) return
+        
         if (state.fromCoords && state.toCoords && state.distance > 0) {
           // Пересчитываем цену с новым классом, используя уже известное расстояние
           state.calculatePrice(state.distance, state.duration)
@@ -108,6 +148,9 @@ export const useRideStore = create<RideState>()(
       setChildSeat: (value) => {
         set({ childSeat: value })
         const state = get()
+        // Не пересчитываем цену если она зафиксирована после заказа
+        if (state.fixedPrice !== null) return
+        
         // Пересчитываем цену при изменении опций
         if (state.fromCoords && state.toCoords && state.distance > 0) {
           // Используем уже известное расстояние
@@ -127,6 +170,9 @@ export const useRideStore = create<RideState>()(
       setLuggage: (value) => {
         set({ luggage: value })
         const state = get()
+        // Не пересчитываем цену если она зафиксирована после заказа
+        if (state.fixedPrice !== null) return
+        
         // Пересчитываем цену при изменении опций
         if (state.fromCoords && state.toCoords && state.distance > 0) {
           // Используем уже известное расстояние
@@ -170,10 +216,18 @@ export const useRideStore = create<RideState>()(
           return
         }
         
-        // Если есть координаты, получаем маршрут из API
+        // Если есть координаты, получаем маршрут из серверного API
         if (fromCoords && toCoords) {
-          fetch(`https://router.project-osrm.org/route/v1/driving/${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}?overview=false`)
-            .then(res => res.json())
+          const fromStr = `${fromCoords[0]},${fromCoords[1]}`
+          const toStr = `${toCoords[0]},${toCoords[1]}`
+          
+          fetch(`/api/route?from=${fromStr}&to=${toStr}&alternatives=false&overview=false`)
+            .then(res => {
+              if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`)
+              }
+              return res.json()
+            })
             .then(data => {
               if (data.code === 'Ok' && data.routes && data.routes[0]) {
                 const route = data.routes[0]
@@ -236,9 +290,14 @@ export const useRideStore = create<RideState>()(
         })
       },
       
+      setFixedPrice: (price) => set({ fixedPrice: price }),
       setOrderStatus: (status) => set({ orderStatus: status }),
       setDriver: (driver) => set({ driver }),
       setRating: (rating) => set({ rating }),
+      setRouteAlternatives: (alternatives) => set({ routeAlternatives: alternatives }),
+      setRouteData: (data) => set({ routeData: data }),
+      setRouteCoordinates: (coordinates) => set({ routeCoordinates: coordinates }),
+      setSelectedRouteIndex: (index) => set({ selectedRouteIndex: index }),
       setMapClickMode: (mode) => set({ mapClickMode: mode }),
       setCenterMapOnCoords: (fn) => set({ centerMapOnCoords: fn }),
       
@@ -251,11 +310,16 @@ export const useRideStore = create<RideState>()(
         childSeat: false,
         luggage: false,
         price: 0,
+        fixedPrice: null,
         duration: 0,
         distance: 0,
         orderStatus: null,
         driver: null,
         rating: null,
+        routeAlternatives: null,
+        routeData: null,
+        routeCoordinates: null,
+        selectedRouteIndex: 0,
         mapClickMode: null,
         centerMapOnCoords: null,
       }),
