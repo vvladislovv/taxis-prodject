@@ -37,13 +37,15 @@ const Home = () => {
   useEffect(() => {
     // Инициализация Telegram WebApp
     if (typeof window !== 'undefined') {
-      import('@twa-dev/sdk').then((sdk) => {
-        if (sdk.init) {
-          sdk.init()
-        }
-      }).catch(() => {
-        console.log('Telegram SDK не доступен, работаем в обычном режиме')
-      })
+      import('@twa-dev/sdk')
+        .then(({ default: WebApp }) => {
+          if (WebApp && typeof WebApp.ready === 'function') {
+            WebApp.ready()
+          }
+        })
+        .catch(() => {
+          console.log('Telegram SDK не доступен, работаем в обычном режиме')
+        })
     }
   }, [])
 

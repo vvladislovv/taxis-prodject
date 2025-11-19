@@ -26,6 +26,9 @@ const Popup = dynamic(
   { ssr: false }
 )
 
+const DEFAULT_FROM_COORDS: [number, number] = [55.7558, 37.6173] // Красная площадь
+const DEFAULT_TO_COORDS: [number, number] = [55.7520, 37.6156] // Тверская улица (примерно 500м от Красной площади)
+
 // Компонент для обновления карты при изменении маршрута
 function MapUpdater({ fromCoords, toCoords, driverLocation, mapRef }: { fromCoords: [number, number] | null, toCoords: [number, number] | null, driverLocation?: [number, number], mapRef: React.MutableRefObject<any> }) {
   const { useMap } = require('react-leaflet')
@@ -221,7 +224,7 @@ function RouteDisplay({ fromCoords, toCoords }: { fromCoords: [number, number] |
         routeRef.current = null
       }
     }
-  }, [map, fromCoords, toCoords, calculatePrice, setRouteCoordinates, orderStatus])
+  }, [map, fromCoords, toCoords, calculatePrice, setRouteCoordinates, orderStatus, L])
 
   return null
 }
@@ -318,9 +321,6 @@ function MapClickHandler({ onMapClick, clickType }: { onMapClick: (lat: number, 
 const MapView = () => {
   // Инициализируем mounted как false для одинакового рендеринга на сервере и клиенте
   const [mounted, setMounted] = useState(false)
-  // Тестовые координаты по умолчанию (центр Москвы)
-  const DEFAULT_FROM_COORDS: [number, number] = [55.7558, 37.6173] // Красная площадь
-  const DEFAULT_TO_COORDS: [number, number] = [55.7520, 37.6156] // Тверская улица (примерно 500м от Красной площади)
   const [selectedAddress, setSelectedAddress] = useState<{ address: string; type: 'from' | 'to' } | null>(null)
   const mapRef = useRef<any>(null)
   const { fromAddress, toAddress, fromCoords, toCoords, setFromCoords, setToCoords, setFromAddress, setToAddress, orderStatus, driver, mapClickMode, setMapClickMode, setCenterMapOnCoords, routeAlternatives, selectedRouteIndex, setSelectedRouteIndex } = useRideStore()
@@ -378,7 +378,17 @@ const MapView = () => {
             }, 100)
           }
         }
-  }, [mounted, fromAddress, fromCoords, toAddress, toCoords, setFromCoords, setToCoords, setFromAddress, setToAddress])
+  }, [
+    mounted,
+    fromAddress,
+    fromCoords,
+    toAddress,
+    toCoords,
+    setFromCoords,
+    setToCoords,
+    setFromAddress,
+    setToAddress,
+  ])
 
   useEffect(() => {
     // Для демо проекта отключаем API геокодирования - используем только тестовые данные

@@ -108,7 +108,7 @@ const OrderStatusPanel = () => {
         }
       }
     }
-  }, [orderStatus, driver, fromCoords, setDriver, setOrderStatus])
+  }, [orderStatus, driver, fromCoords, toCoords, setDriver, setOrderStatus])
 
   // Симуляция движения во время поездки с плавной анимацией по маршруту
   useEffect(() => {
@@ -248,8 +248,8 @@ const OrderStatusPanel = () => {
     }
   }, [orderStatus, driver, fromCoords, setDriver])
 
-  // Не показываем панель статуса, если поездка завершена (показывается RatingPanel)
-  if (!orderStatus || orderStatus === 'completed') return null
+  // Не показываем панель статуса, если статус отсутствует
+  if (!orderStatus) return null
 
   const handleCancel = () => {
     setOrderStatus(null)

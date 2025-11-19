@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     // Очищаем старые записи из кэша (простая очистка)
     if (routeCache.size > 100) {
       const now = Date.now()
-      for (const [key, value] of routeCache.entries()) {
+      for (const [key, value] of Array.from(routeCache.entries())) {
         if (now - value.timestamp > CACHE_TTL) {
           routeCache.delete(key)
         }
